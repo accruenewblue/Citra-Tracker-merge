@@ -196,12 +196,18 @@ class Pokemon:
 
     def getAtts(self,gamegroupid,gen):
         dex = self.species_num()
-        form = struct.unpack("B",self.raw_data[0x1D:0x1E])[0]
+        try:
+            form = struct.unpack("B",self.raw_data[0x1D:0x1E])[0]
+        except:
+            form = 0
+        if dex==0:
+            return 
         query = f"""
             select pokemonid from "pokemon.pokemon" 
                 where pokemonpokedexnumber = {dex} 
                     and pokemonsuffix is not 'galar'
-                    and pokemonsuffix is not 'paldea'"""
+                    and pokemonsuffix is not 'paldea'
+                    """
         # print("form",form,"dex",dex)
         match dex:
             #bit 0: fateful encounter flag
@@ -352,7 +358,7 @@ class Pokemon:
                         query+= " and pokemonsuffix = 'ash'"
             case 664 | 665 | 666 | 669: ### Scatterbug, Spewda, Vivillon, Flabébé
                 query+= SUFFIXES["PKMN_SUFFIX_NULL"]
-            case 670: ### Floette
+            case 670: ### Floette #if theres an error pointing to this line with a json decode error try deleting the trackerdata.json file. might delete your saved data but its probably corrupted anyways
                 match form:
                     case 42: #0 8 16 24 32 40
                         query+= " and pokemonsuffix = 'eternal'"
@@ -468,7 +474,8 @@ class Pokemon:
                 else:
                     query+= SUFFIXES["PKMN_SUFFIX_NULL"]
         # print(query)
-        self.id = cursor.execute(query).fetchone()[0]
+        try: self.id = cursor.execute(query).fetchone()[0]
+        except Exception as e: print(e, ". most likely the tracker is trying to reach data from an invalid species number")
         self.species,self.suffix,self.name = cursor.execute(f"""select pokemonspeciesname,pokemonsuffix,pokemonname from "pokemon.pokemon" where pokemonid = {self.id}""").fetchone()
         self.suffix = self.suffix or ''
         # self.name = self.name.replace(' Form','').replace(' Cloak','')
@@ -661,7 +668,9 @@ class Pokemon:
         """
         learnlist = cursor.execute(query).fetchall()
         if learnlist==[]:
-            mainmonmovequery=int(cursor.execute(f"""SELECT pokemonid FROM "pokemon.pokemon" WHERE pokemonpokedexnumber = "{self.species_num()}" AND pokemonsuffix ISNULL """ ).fetchone()[0])
+            if self.species_num()==681:
+                mainmonmovequery=int(cursor.execute(f"""SELECT pokemonid FROM "pokemon.pokemon" WHERE pokemonpokedexnumber = "{self.species_num()}" AND pokemonsuffix = 'shield'""" ).fetchone()[0])
+            else: mainmonmovequery=int(cursor.execute(f"""SELECT pokemonid FROM "pokemon.pokemon" WHERE pokemonpokedexnumber = "{self.species_num()}" AND pokemonsuffix ISNULL """ ).fetchone()[0])
             learnlist=cursor.execute(f"""select pokemonmovelevel
                 from "pokemon.pokemonmove" pm
                     left join "pokemon.pokemonmovemethod" pmm on pm.pokemonmovemethodid = pmm.pokemonmovemethodid
@@ -789,8 +798,13 @@ def getaddresses(c):
         battlewildoppadd=142622412
         battletrainerpartyadd=142622504
         battletraineroppadd=142625484
-        curoppadd=138545352
-        wildppadd=136331232
+        battlefishparty=battlewildpartyadd+8+2980
+        battlefishparty2=battlewildpartyadd+64+2980
+        battlefishopp=battlewildpartyadd+8
+        battlefishopp2=battlewildpartyadd+64
+        curoppadd=138545352 
+        curoppadd2=139016488
+        wildppadd=136331232 
         trainerppadd=136338160
         multippadd=136331232+20784
         mongap=580
@@ -801,8 +815,13 @@ def getaddresses(c):
         battlewildoppadd=0x8CF727C-6000000+815420
         battletrainerpartyadd=0x8CF727C-6000000+809556
         battletraineroppadd=0x8CF727C-6000000+812536
+        battlefishparty=battlewildpartyadd+204+2980
+        battlefishparty2=battlewildpartyadd+244+2980
+        battlefishopp=battlewildpartyadd+204
+        battlefishopp2=battlewildpartyadd+244
         curoppadd=0x8CF727C-0xAF2F5C+0x22EA60 #little endian
-        wildppadd=0x8CF727C-0xAF2F5C-20 #0x8CF727C-0xAF2F5C
+        curoppadd2=0x8CF727C-0xAF2F5C-20+6928+2752452
+        wildppadd=0x8CF727C-0xAF2F5C-20 #0x8CF727C-0xAF2F5C 
         trainerppadd=0x8CF727C-0xAF2F5C-20+6928
         multippadd=0x8CF727C-0xAF2F5C-20+6928+20784
         mongap=580 #Gen 6 has a gap between each mon's data, and goes directly from your mons to the opponent's...
@@ -813,7 +832,12 @@ def getaddresses(c):
         battlewildoppadd=0x34195E10-30000000+5702188
         battletrainerpartyadd=0x33F7FA44-30000000+7995384
         battletraineroppadd=0x33F7FA44-30000000+7998364
-        curoppadd=0x34195E10-68732064+68472752
+        battlefishparty=battlewildpartyadd+204+2980 #fishing offsets copied from oras just to not crash it
+        battlefishparty2=battlewildpartyadd+244+2980
+        battlefishopp=battlewildpartyadd+204
+        battlefishopp2=battlewildpartyadd+244
+        curoppadd=0x34195E10-68732064-34-28+15267416+62
+        curoppadd2=0x34195E10-68732064+68472752 #wildppadd-28+15267416+62
         wildppadd=0x34195E10-68732064-34
         trainerppadd=0x34195E10-68732064-34
         multippadd=wildppadd
@@ -825,8 +849,13 @@ def getaddresses(c):
         battlewildoppadd=0x33F7FA44-30000000+7011648 
         battletrainerpartyadd=0x33F7FA44-30000000+7110648
         battletraineroppadd=0x33F7FA44-30000000+7113628
-        curoppadd=0x33F7FA44-0x3f760d4+66286592
-        wildppadd=0x33F7FA44-0x3f760d4-34
+        battlefishparty=battlewildpartyadd+204+2980
+        battlefishparty2=battlewildpartyadd+244+2980
+        battlefishopp=battlewildpartyadd+204
+        battlefishopp2=battlewildpartyadd+244
+        curoppadd=0x33F7FA44-0x3f760d4-34+42+9717396
+        curoppadd2=0x33F7FA44-0x3f760d4-34+9676382 #in gen 6 the singles value seems to correspond to the right mon in doubles, in gen 7 it corresponds to the right
+        wildppadd=0x33F7FA44-0x3f760d4-34 #second of two values
         trainerppadd=0x33F7FA44-0x3f760d4-34
         multippadd=wildppadd
         mongap=816
@@ -834,14 +863,26 @@ def getaddresses(c):
     else:
         return -1,-1,-1,-1,-1,-1,-1
     
-    if read_party(c,battlewildoppadd)[0].species_num() in range(1,808) and int.from_bytes(c.read_memory(wildppadd,1))<65:
-        return battlewildpartyadd,battlewildoppadd,wildppadd,curoppadd,'w',mongap,badgeaddress
-    elif read_party(c,battletraineroppadd)[0].species_num() in range(1,808) and int.from_bytes(c.read_memory(trainerppadd,1))<65:
-        return battletrainerpartyadd,battletraineroppadd,trainerppadd,curoppadd,'t',mongap,badgeaddress
+    if (getGam=='Sun/Moon' or 'UltraSun/UltraMoon') and (read_party(c,battlewildpartyadd-2980)[0].species_num()==read_party(c,partyaddress)[0].species_num()) and (0<int.from_bytes(c.read_memory(wildppadd,1))<65) and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65:
+        return battlewildpartyadd-2980,battlewildpartyadd,wildppadd,curoppadd,curoppadd2,'ts',mongap,badgeaddress
+    elif read_party(c,battlewildoppadd)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65: #wild mon check
+            #second check checks the pp of the first mon's first move. the +1 at the end of it makes it check the max pp instead of the current pp, which reduces problems with misidentification, as otherwise the "event wilds" were registering as trainer battles and crashign the tracker.
+        return battlewildpartyadd,battlewildoppadd,wildppadd,curoppadd,curoppadd2,'w',mongap,badgeaddress
+    elif read_party(c,battlefishopp2)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65 and int.from_bytes(c.read_memory(wildppadd+1,1))>=int.from_bytes(c.read_memory(wildppadd,1)): 
+        #fishing check- either offset by 64 or 8 depending on use from bag or register respectively
+        return battlefishparty2,battlefishopp2,wildppadd,curoppadd,curoppadd2,'f',mongap,badgeaddress
+    elif read_party(c,battlefishopp)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65 and int.from_bytes(c.read_memory(wildppadd+1,1))>=int.from_bytes(c.read_memory(wildppadd,1)):
+        return battlefishparty,battlefishopp,wildppadd,curoppadd,curoppadd2,'f',mongap,badgeaddress
+    elif read_party(c,battletraineroppadd)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(trainerppadd,1))<65 and 0<int.from_bytes(c.read_memory(trainerppadd+1,1))<65 and int.from_bytes(c.read_memory(trainerppadd+1,1))>=int.from_bytes(c.read_memory(trainerppadd,1)): #trainer mon check
+        return battletrainerpartyadd,battletraineroppadd,trainerppadd,curoppadd,curoppadd2,'t',mongap,badgeaddress
+    elif read_party(c,battletraineroppadd)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65 and int.from_bytes(c.read_memory(wildppadd+1,1))>=int.from_bytes(c.read_memory(wildppadd,1)): # "event wild" check (rock smash, ambush)
+        return battletraineroppadd,battletrainerpartyadd,wildppadd,curoppadd,curoppadd2,'e',mongap,badgeaddress
+    elif read_party(c,battletraineroppadd)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd+20784,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+20784+1,1))<65 and int.from_bytes(c.read_memory(wildppadd+1+20784,1))>=int.from_bytes(c.read_memory(wildppadd+20784,1)): #multis, only tested in xy
+        return battletrainerpartyadd,battletraineroppadd+2980,wildppadd+20784,curoppadd,curoppadd2,'m',mongap,badgeaddress
     # elif read_party(c,battletraineroppadd)[0].species_num() in range(1,808) and int.from_bytes(c.read_memory(multippadd,1)) in range(1,65):
     #     return battletrainerpartyadd,battletraineroppadd,multippadd,curoppadd,'m',mongap,badgeaddress
-    else:
-        return partyaddress,0,0,0,'p',mongap,badgeaddress
+    else: #assume no opponent data exists if none is found
+        return partyaddress,0,0,0,0,'p',mongap,badgeaddress
 def cls():
     os.system('cls' if os.name=='nt' else 'clear')
 
@@ -1151,7 +1192,7 @@ def run():
         #print('connected to citra')
         loops = 0
         l = 1 # corresponding layout
-        slotchoice, slotlevel = '', 1
+        slotchoice, slotlevel, slotchoice2 = '', 1, ''
         enemymon, enemylevel = '', 1
         enemydict = {"abilities": [], "stats": ["", "", "", "", "", ""], "notes": "", "levels": [], "moves": []}
         change = ''
@@ -1248,6 +1289,9 @@ def run():
                     elif event == '-slotdrop-':
                         slotchoice = values['-slotdrop-']
                         window['-slotdrop-'].widget.select_clear()
+                    elif event == '-slotdrop-e-':
+                        slotchoice2 = values['-slotdrop-e-']
+                        window['-slotdrop-e-'].widget.select_clear()
                     elif event == '-hp-e-':
                         u, col = statnotes(enemydict, 0)
                         trackdata[enemymon]['stats'] = u['stats']
@@ -1308,12 +1352,10 @@ def run():
                             continue
                     elif event == '-clearnotes-':
                         confirm = sg.popup_ok_cancel('Load next seed?\nAfter clicking yes, wait 1 sec then Citra > Emulation > Restart.', title='Confirm')
-                        prevmon = party1[0].species_num()
-                        # print(prevmon)
                         if confirm == 'OK':
                             seed = notesclear()
                             trackdata=json.load(open(trackadd,"r+"))
-                            slotchoice = ''
+                            slotchoice, slotchoice2 = '',''
                             window['-ph1-'].update('Waiting for new mon...', visible=True)
                             # clearing visual tracker info
                             window['-ability-'].update('')
@@ -1347,19 +1389,7 @@ def run():
                                 window['-mv{}bp-e-'.format(ct)].update(visible = False)
                                 window['-mv{}acc-e-'.format(ct)].update(visible = False)
                                 window['-mv{}ctc-e-'.format(ct)].update(visible = False)
-                            time.sleep(5)
-                            print('Waiting for new mon, tracker may be unresponsive...')
-                            b = 0
-                            while b == 0:
-                                time.sleep(5) # retesting every 5 seconds
-                                partyadd,enemyadd,ppadd,curoppnum,enctype,mongap,badgeaddress=getaddresses(c)
-                                try:
-                                    party1=read_party(c,partyadd)
-                                except:
-                                    b = 0
-                                if (party1[0].species_num() != None) and (party1[0].species_num() != 0) and (party1[0].species_num() != prevmon):
-                                    b = 1
-                                # print(prevmon, ';;;', party1[0].species_num(), ';;;', b)
+                            time.sleep(8)
                             try:
                                 # need to fire up the log for the next one
                                 pkmn_srch = 0
@@ -1606,8 +1636,7 @@ def run():
                                 window[f'-log-train-pkmnlvl-{i}-'].update(t_dict[t][t_names[n]][1][j+1])
                     elif event in ('-load-log-'):
                         logloader_solo((380, 580))
-                    partyadd,enemyadd,ppadd,curoppnum,enctype,mongap,badgeaddress=getaddresses(c)
-                    # print("loops" + str(loops))
+                    partyadd,enemyadd,ppadd,curoppnum,curoppnum2,enctype,mongap,badgeaddress=getaddresses(c)
                     loops+=1
 
                     # only continue reading data if a supported game is running
@@ -1615,36 +1644,38 @@ def run():
                         continue
 
                     #print('reading party')
-                    party1=read_party(c,partyadd) 
-                    party2=read_party(c,enemyadd)
-                    # print(party1[0].species_num())
-                    party=party1+party2
+                    party1=read_party(c,partyadd)
+                    party2enemies=read_party(c,enemyadd)
                     pk=1
                     #print('read party... performing loop')
                     #skips trainer mons that arent out yet
                     enemynum=int.from_bytes(c.read_memory(curoppnum,2),"little")
+                    enemynum2=int.from_bytes(c.read_memory(curoppnum2,2),"little")
                     pkmni=0
                     emon = ''
                     abblist = []
-                    for pkmn in party:
-                        if pkmn in party1:
-                            if pkmn.species_num()==0:
-                                party1.remove(pkmn)
-                            if pkmn.species_num()!=0:
-                                pkmn.getAtts(gamegroupid,gen)
-                                abblist.append(pkmn.ability['name'])
-                    for pkmn in party2:
+                    for pkmn in party1:
+                        if pkmn.species_num()==0:
+                            party1.remove(pkmn)
+                        if pkmn.species_num()!=0:
+                            pkmn.getAtts(gamegroupid,gen)
+                            abblist.append(pkmn.ability['name'])
+                    party2set,party2=[],[]
+                    for pkmn in party2enemies:
+                        pkmn.getAtts(gamegroupid,gen)
+                        if (pkmn.species_num() in [enemynum, enemynum2]) and (pkmn.species_num()!=0) and (pkmn.species_num() not in party2set):
+                            party2.append(pkmn)
+                        party2set.append(pkmn.species_num())
                         pkmni+=1
-                        if pkmn.species_num()!=enemynum:
-                            party.remove(pkmn)
-                        else:
-                            pkmnindex=(pkmni)
-                            if enctype!="p":
-                                pkmn.getAtts(gamegroupid,gen)
-                                if pkmn.suffix!="":
-                                    weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" AND form = "{pkmn.suffix}" """ 
-                                else: weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" """ 
-                                break
+                        if enctype!="p" and pkmn.species_num()!=0:
+                            if pkmn.name == slotchoice2:
+                                pkmnindex=pkmni
+                            elif slotchoice2 == '':
+                                pkmnindex=pkmni
+                            if pkmn.suffix!="":
+                                weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" AND form = "{pkmn.suffix}" """ 
+                            else: weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" """ 
+                    party=party1+party2
                     typelist=["Normal","Fighting","Flying","Poison","Ground","Rock","Bug","Ghost","Steel","Fire","Water","Grass","Electric","Psychic","Ice","Dragon","Dark","Fairy"]
                     enemytypes=[]
                     try:
@@ -1658,11 +1689,15 @@ def run():
                                 enemytypes.append(typelist[byte])
                     except Exception:
                         print(Exception)
-                    slot = []
+                    slot,slot2 = [],[]
                     for pkmn in party:
                         if pkmn.species_num() in range (1,808): ### Make sure the slot is valid & not an egg
                             pkmn.getAtts(gamegroupid,gen)
                             if pkmn in party2:
+                                if (slotchoice2 == ''):
+                                    slotchoice2 = pkmn.name # only kicks the first time through the code
+                                if pkmn.name not in slot2:
+                                    slot2.append(pkmn.name)
                                 if gen==6:
                                     pk=pkmnindex+len(party1)
                                 elif gen==7:
@@ -1680,7 +1715,7 @@ def run():
                                     pkmn_srch = log_pkmn.loc[log_pkmn['NUM'] == pkmn.species_num()].index[0]
                                     # print(pkmn.species_num())
                             window['-slotdrop-'].Update(values=slot, value=slotchoice, visible=True)
-                            # print(c, ';;;', getGame(c), ';;;', pkmn, ';;;', items)
+                            window['-slotdrop-e-'].Update(values=slot2, value=slotchoice2, visible=True)
                             hphl, statushl, pphl, badgect, miscitems = bagitems(c, getGame(c), pkmn, items, badgeaddress)
                             # print(enctype, ';;;', pkmn.name, ';;;', party.index(pkmn)+1, ';;;', pkmnindex+12)
                             # print(badgect)
@@ -1930,7 +1965,6 @@ def run():
                                             weightquery2=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" AND form = "{pkmn.suffix}" """ 
                                         else: 
                                             weightquery2=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" """ 
-                                        # print(weightquery2)
                                         pkmnweight=cursor.execute(weightquery2).fetchone()[0]
                                         # print(pkmnweight)
                                         acc = calcAcc(move, slotlevel, enemylevel)
@@ -1939,6 +1973,10 @@ def run():
                                         window['-mv{}text-'.format(pkmn.moves.index(move) + 1)].update(move["name"], text_color=typeformatting(movetyp))
                                         window['-mv{}text-'.format(pkmn.moves.index(move) + 1)].set_tooltip(move["description"])
                                         window['-mv{}pp-'.format(pkmn.moves.index(move) + 1)].update('{}/{}'.format(int.from_bytes(c.read_memory(ppadd+(mongap*(pk-1))+(14*(pkmn.moves).index(move)),1)), int.from_bytes(c.read_memory(ppadd+(mongap*(pk-1))+1+(14*(pkmn.moves).index(move)),1))))
+                                        #print("p[]",int.from_bytes(c.read_memory(ppadd+42+2678280+6,2),"little"),)#3 addresses for opponent's second mon out. Other two below are inconsistent.
+                                              #(ppadd+42-1967556+6,2),"little"), (ppadd+42+2946720+6,2),"little")) 
+                                        #for bytetesting in range(0,15):
+                                            #print(int.from_bytes(c.read_memory(ppadd+42+2946720+bytetesting,1)))
                                         window['-mv{}mod-'.format(pkmn.moves.index(move) + 1)].update(IMG_MODIFIER_STR.format(modimage))
                                         if stab == movetyp:
                                             window['-mv{}bp-'.format(pkmn.moves.index(move) + 1)].update(calcPower(pkmn,move,hpnum[0],hpnum[1],pkmnweight,weightquery), text_color=typeformatting(movetyp))
@@ -1946,9 +1984,9 @@ def run():
                                             window['-mv{}bp-'.format(pkmn.moves.index(move) + 1)].update(calcPower(pkmn,move,hpnum[0],hpnum[1],pkmnweight,weightquery), text_color='white')
                                         window['-mv{}acc-'.format(pkmn.moves.index(move) + 1)].update(acc)
                                         window['-mv{}ctc-'.format(pkmn.moves.index(move) + 1)].update(contact)
-                                elif (pkmn in party2) & (((gen == 6) & (party.index(pkmn)+1 == 7)) | ((gen == 7) & (party.index(pkmn)+1 == 7))): # this works for singles in XY, needs testing for all other games; only access first mon stuff, may want to figure out a way to include double battle (may not work for multis)
+                                elif (pkmn in party2) & (((gen == 6) & (party.index(pkmn)+1 == 7)) | ((gen == 7) & (party.index(pkmn)+1 == 7))) or enemynum2 in range(1,808) and (pkmn.name == slotchoice2): 
+                                # this works for singles in XY, needs testing for all other games; only access first mon stuff, may want to figure out a way to include double battle (may not work for multis)
                                 # elif ((pkmn in party2) & (party.index(pkmn)+1 == 7)) | ((enctype == 't') & (party.index(pkmn)+1 == 1)): # this works for singles in XY, needs testing for all other games; only access first mon stuff, may want to figure out a way to include double battle (may not work for multis)
-                                    # print(pkmn.name, ';;;', pkmn.species, ';;;', party.index(pkmn)+1)
                                     if int(pkmn.cur_hp) > 750: ### Make sure the memory dump hasn't happened (or whatever causes the invalid values)
                                         continue
                                     if int(pkmn.level)>100:

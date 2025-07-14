@@ -273,8 +273,8 @@ def pivotlist(game, gen, wilds_df):
         sets = ['Set #22', 'Set #138', 'Set #23', 'Set #132', 'Set #36', 'Set #37', 'Set #38', 'Set #223', 'Set #42', 'Set #43', 'Set #45', 'Set #6', 'Set #52']
         locs = ['Route 2', 'Santalune Forest', 'Route 3', 'Route 22', 'Route 7 (Grass)', 'Route 7 (Yellow)', 'Route 7 (Purple)', 'Connecting Cave', 'Route 8 (Grass)', 'Route 8 (Yellow)', 'Route 8 (Rock)', 'Ambrette Town (Rock)', 'Route 9']
     elif game == 'OmegaRuby/AlphaSapphire':
-        sets = ['Set #34', 'Set #39', 'Set #48', 'Set #66', 'Set #346', 'Set #57', 'Set #42', 'Set #51', 'Set #69', 'Set #60', 'Set #147', 'Set #2', 'Set #10']
-        locs = ['Route 101', 'Route 102', 'Route 103', 'Route 104 (South)', 'Petalburg Woods', 'Route 104 (North)', 'Route 102 (Old Rod)', 'Route 103 (OR)', 'Route 104 (South, OR)', 'Route 104 (North, OR)', 'Route 115 (OR)', 'Dewford Town (OR)', 'Petalburg City (OR)']
+        sets = ['Set #34', 'Set #39', 'Set #48', 'Set #66', 'Set #346', 'Set #57', 'Set #1', 'Set #3', 'Set #9', 'Set #11', 'Set #13', 'Set #15', 'Set #41', 'Set #43', 'Set #50', 'Set #52']
+        locs = ['Route 101', 'Route 102', 'Route 103', 'Route 104 (South)', 'Petalburg Woods', 'Route 104 (North)', 'Dewford Town (S)', 'Dewford Town (GR)', 'Petalburg City (S)', 'Petalburg City (GR)', 'Slateport City (S)', 'Slateport City (GR)', 'Route 102 (S)', 'Route 102 (GR)', 'Route 103 (S)', 'Route 103 (GR)']
     elif gen == 7:
         sets = ['Set #1', 'Set #2', 'Set #12', 'Set #13', 'Set #14', 'Set #3', 'Set #10', 'Set #80', 'Set #81', 'Set #82', 'Set #83', 'Set #29', 'Set #31', 'Set #28', 'Set #30', 'Set #49', 'Set #53', 'Set #52', 'Set #54', 'Set #56', 'Set #57', 'Set #68', 'Set #69', 'Set #34', 'Set #43', 'Set #47', 'Set #70', 'Set #71']
         locs = ['Route 1 Grass #1', 'Route 1 Grass #2', 'Route 1 Grass #3', 'Route 1 Grass #4', 'Route 1 Grass #5', "Professor's House #1", "Professor's House #2", 'Trainers School #1', 'Trainers School #2', 'Trainers School #3', 'Trainers School #4', 'Hauoli Grass Area #1', 'Hauoli Grass Area #2', 'Hauoli Grass Area #3', 'Hauoli Grass Area #4', 'Route 2 Grass #1', 'Route 2 Grass #2', 'Route 2 Grass #3', 'Route 2 Grass #4', 'Route 2 Grass #5', 'Route 2 Grass #6', 'Hauoli Cemetary #1', 'Hauoli Cemetary #2', 'Route 3 Grass #1', 'Route 3 Grass #2', 'Route 3 Grass #3', 'Melemele Meadow', 'Seaward Cave']
@@ -324,13 +324,13 @@ def trainerlist(game, trainer_df):
             titles[2]:{name[8]:[idx[8]], name[9]:[idx[9]], name[10]:[idx[10]], name[11]:[idx[11]], name[12]:[idx[12]]},
             titles[3]:{name[13]:[idx[13]], name[14]:[idx[14]], name[15]:[idx[15]]}}
     elif game == 'OmegaRuby/AlphaSapphire':
-        name = ['Wally', 'Roxanne', 'Brawly', 'Wattson', 'Flannery', 'Norman', 'Winona', 'Tate & Liza', 'Wallace', 'E4 Sidney', 'E4 Phoebe', 'E4 Glacia', 'E4 Drake', 'Steven', 'Archie #1', 'Archie #2', 'Maxie #1', 'Maxie #2']
-        idx = [560, 562, 566, 568, 569, 570, 551, 571, 552, 553, 554, 555, 556, 582, 230, 177, 235, 234]
-        titles = ['Rivals', 'Gym Leaders', 'Elite Four', 'Magma/Aqua']
+        name = ['Wally', 'Roxanne', 'Brawly', 'Wattson', 'Flannery', 'Norman', 'Winona', 'Tate & Liza', 'Wallace', 'Sidney', 'Phoebe', 'Glacia', 'Drake', 'Steven', 'Sky Pillar Wallace', 'Zinnia', 'Archie #1', 'Archie #2', 'Maxie #1', 'Maxie #2']
+        idx = [582, 560, 562, 566, 568, 569, 570, 551, 571, 552, 553, 554, 555, 556, 942, 712, 230, 177, 235, 234]
+        titles = ['Rivals', 'Gym Leaders', 'Elite Four & Delta Episode', 'Magma/Aqua']
         t_dict = {titles[0]:{name[0]:[idx[0]]}, 
             titles[1]:{name[1]:[idx[1]], name[2]:[idx[2]], name[3]:[idx[3]], name[4]:[idx[4]], name[5]:[idx[5]], name[6]:[idx[6]], name[7]:[idx[7]], name[8]:[idx[8]]}, 
-            titles[2]:{name[9]:[idx[9]], name[10]:[idx[10]], name[11]:[idx[11]], name[12]:[idx[12]], name[13]:[idx[13]]},
-            titles[3]:{name[14]:[idx[14]], name[15]:[idx[15]], name[16]:[idx[16]], name[17]:[idx[17]]}}
+            titles[2]:{name[9]:[idx[9]], name[10]:[idx[10]], name[11]:[idx[11]], name[12]:[idx[12]], name[13]:[idx[13]], name[14]:[idx[14]], name[15]:[idx[15]]},
+            titles[3]:{name[16]:[idx[16]], name[17]:[idx[17]], name[18]:[idx[18]], name[19]:[idx[19]]}}
     elif game == 'Sun/Moon':
         name = ['Hala', 'Olivia', 'Nanu', 'Hapu', 'E4 Hala', 'E4 Olivia', 'E4 Acerola', 'E4 Kahili', 'Kukui v1', 'Kukui v2', 'Kukui v3', 'Guzma #1', 'Guzma #2', 'Guzma #3', 'Lusamine #1', 'Lusamine #2']
         idx = [22, 89, 153, 154, 151, 152, 148, 155, 128, 412, 413, 137, 234, 235, 130, 157]
