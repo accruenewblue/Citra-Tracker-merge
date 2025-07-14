@@ -115,7 +115,7 @@ def defaultuisettings(font_sizes, logview):
 
 
     topcol1a = [
-        # [sg.Text(key='-slot-e-'),],
+        [sg.Combo([], visible=True, font=('Franklin Gothic Medium', font_sizes[1]), enable_events=True, key='-slotdrop-e-', readonly=True, expand_x=True, background_color='black', text_color='white')],
         [sg.Image(key='-monimg-e-', enable_events=True)], 
         [sg.Text(justification='c', key='-monname-e-'), sg.Text(font=('Arial', font_sizes[2], 'bold'), key='-monnum-e-')],
         [sg.Image(key='-typeimg1-e-'), sg.Text(key='-typename1-e-'), sg.Image(key='-typeimg2-e-', visible=False), sg.Text(key='-typename2-e-', visible=False),],
