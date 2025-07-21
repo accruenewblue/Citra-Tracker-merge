@@ -836,8 +836,8 @@ def getaddresses(c):
         battlefishparty2=battlewildpartyadd+244+2980
         battlefishopp=battlewildpartyadd+204
         battlefishopp2=battlewildpartyadd+244
-        curoppadd=0x34195E10-68732064-34-28+15267416+62
-        curoppadd2=0x34195E10-68732064+68472752 #wildppadd-28+15267416+62
+        curoppadd2=0x34195E10-68732064-34-28+15267416+62
+        curoppadd=0x34195E10-68732064+68472752 #wildppadd-28+15267416+62
         wildppadd=0x34195E10-68732064-34
         trainerppadd=0x34195E10-68732064-34
         multippadd=wildppadd
@@ -853,16 +853,25 @@ def getaddresses(c):
         battlefishparty2=battlewildpartyadd+244+2980
         battlefishopp=battlewildpartyadd+204
         battlefishopp2=battlewildpartyadd+244
-        curoppadd=0x33F7FA44-0x3f760d4-34+42+9717396
-        curoppadd2=0x33F7FA44-0x3f760d4-34+9676382 #in gen 6 the singles value seems to correspond to the right mon in doubles, in gen 7 it corresponds to the right
+        curoppadd2=0x33F7FA44-0x3f760d4-34+42+9717396
+        curoppadd=0x33F7FA44-0x3f760d4-34+9676382 #in gen 6 the singles value seems to correspond to the right mon in doubles, in gen 7 it corresponds to the right
         wildppadd=0x33F7FA44-0x3f760d4-34 #second of two values
         trainerppadd=0x33F7FA44-0x3f760d4-34
         multippadd=wildppadd
         mongap=816
         badgeaddress = 0
     else:
-        return -1,-1,-1,-1,-1,-1,-1
-    
+        return -1,-1,-1,-1,-1,-1,-1\
+    #i believe usign sweet scent also offsets party data slightly
+    #print(read_party(c,battlewildpartyadd)[0].species_num(), "...", int.from_bytes(c.read_memory(wildppadd+20784,1)))
+    #print(read_party(c,battlewildpartyadd+96)[0].species_num(), "...", int.from_bytes(c.read_memory(wildppadd-20784,1)), int.from_bytes(c.read_memory(curoppadd+2,2),"little"))
+    #for mon in range(-1000,1000):
+        #if int.from_bytes(c.read_memory(wildppadd+42+9717396+mon,2), 'little')==672: #9705024, 25713140, 66324132... definitely 9746044
+            #print(mon, "2323yui")
+    for mon in range(-1,6):
+        print(read_party(c,battletrainerpartyadd)[mon].species_num()) #wild hordes use normal wild pp address but some offset party add.
+    print((read_party(c,battlewildoppadd)[0].species_num()), int.from_bytes(c.read_memory(wildppadd,1)), int.from_bytes(c.read_memory(curoppadd2,2),"little"))
+    #print((read_party(c,battletraineroppadd)[0].species_num()), int.from_bytes(c.read_memory(trainerppadd,1)), int.from_bytes(c.read_memory(curoppadd,2),"little"))
     if (getGam=='Sun/Moon' or 'UltraSun/UltraMoon') and (read_party(c,battlewildpartyadd-2980)[0].species_num()==read_party(c,partyaddress)[0].species_num()) and (0<int.from_bytes(c.read_memory(wildppadd,1))<65) and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65:
         return battlewildpartyadd-2980,battlewildpartyadd,wildppadd,curoppadd,curoppadd2,'ts',mongap,badgeaddress
     elif read_party(c,battlewildoppadd)[0].species_num() in range(1,808) and 0<int.from_bytes(c.read_memory(wildppadd,1))<65 and 0<int.from_bytes(c.read_memory(wildppadd+1,1))<65: #wild mon check
@@ -1638,7 +1647,7 @@ def run():
                         logloader_solo((380, 580))
                     partyadd,enemyadd,ppadd,curoppnum,curoppnum2,enctype,mongap,badgeaddress=getaddresses(c)
                     loops+=1
-
+                    print(enctype)
                     # only continue reading data if a supported game is running
                     if partyadd == -1:
                         continue
@@ -1660,14 +1669,22 @@ def run():
                         if pkmn.species_num()!=0:
                             pkmn.getAtts(gamegroupid,gen)
                             abblist.append(pkmn.ability['name'])
+                    if party1[len(party1)-1].species_num()==0:
+                        party1.remove(party1[len(party1)-1])
+                    print(len(party1), party1[len(party1)-1].species_num())
+                    for pkmn in party1:
+                        print(pkmn.species_num(),"p1")
                     party2set,party2=[],[]
                     for pkmn in party2enemies:
                         pkmn.getAtts(gamegroupid,gen)
                         if (pkmn.species_num() in [enemynum, enemynum2]) and (pkmn.species_num()!=0) and (pkmn.species_num() not in party2set):
                             party2.append(pkmn)
+                            if (slotchoice2 == ''):
+                                slotchoice2 = pkmn.name
                         party2set.append(pkmn.species_num())
                         pkmni+=1
                         if enctype!="p" and pkmn.species_num()!=0:
+                            print(slotchoice2, "slotc2")
                             if pkmn.name == slotchoice2:
                                 pkmnindex=pkmni
                             elif slotchoice2 == '':
@@ -1675,7 +1692,7 @@ def run():
                             if pkmn.suffix!="":
                                 weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" AND form = "{pkmn.suffix}" """ 
                             else: weightquery=f"""SELECT kg FROM "pokemon.weight" WHERE name = "{pkmn.species}" """ 
-                    party=party1+party2
+                    party=party1+party2enemies
                     typelist=["Normal","Fighting","Flying","Poison","Ground","Rock","Bug","Ghost","Steel","Fire","Water","Grass","Electric","Psychic","Ice","Dragon","Dark","Fairy"]
                     enemytypes=[]
                     try:
@@ -1683,12 +1700,14 @@ def run():
                             pke=pkmnindex+len(party1)
                         elif gen==7:
                             pke=pkmnindex+12
+                        print(pke, pkmnindex, "pke+ind")
+                        print(party[pke].species_num(), "pkiparty")
                         typereadere=c.read_memory(ppadd+(mongap*(pke-1))-(2*(gen+6)),2) #(2*(gen+6))
                         for byte in typereadere:
                             if 0 <= byte < len(typelist) and typelist[byte] not in enemytypes:
                                 enemytypes.append(typelist[byte])
-                    except Exception:
-                        print(Exception)
+                    except Exception as e:
+                        print(e, "\nline 1707")
                     slot,slot2 = [],[]
                     for pkmn in party:
                         if pkmn.species_num() in range (1,808): ### Make sure the slot is valid & not an egg
@@ -1698,10 +1717,6 @@ def run():
                                     slotchoice2 = pkmn.name # only kicks the first time through the code
                                 if pkmn.name not in slot2:
                                     slot2.append(pkmn.name)
-                                if gen==6:
-                                    pk=pkmnindex+len(party1)
-                                elif gen==7:
-                                    pk=pkmnindex+12
                             else:
                                 slot.append(pkmn.name)
                             if (slotchoice == ''):
@@ -1732,8 +1747,12 @@ def run():
                                 # print_bits(pkmn.unknown_flags_ea())
                                 # print_bits(pkmn.unknown_flags_eb())
                                 # analyze_statuses(pkmn)
+                                print(party.index(pkmn)+1, "index")
+                                
+                                print((pkmn in party2), gen, (party.index(pkmn)+1), enemynum, enemynum2, enemynum in range(1,808), (pkmn.name,slotchoice2),(pkmn.name == slotchoice2))
                                 #### Begin Pokemon div
                                 if (pkmn in party1) and (pkmn.name == slotchoice): 
+                                    print(party.index(pkmn)+1, "indexp")
                                     if int(pkmn.cur_hp) > 750: ### Make sure the memory dump hasn't happened (or whatever causes the invalid values)
                                         continue
                                     if int(pkmn.level)>100:
@@ -1984,12 +2003,15 @@ def run():
                                             window['-mv{}bp-'.format(pkmn.moves.index(move) + 1)].update(calcPower(pkmn,move,hpnum[0],hpnum[1],pkmnweight,weightquery), text_color='white')
                                         window['-mv{}acc-'.format(pkmn.moves.index(move) + 1)].update(acc)
                                         window['-mv{}ctc-'.format(pkmn.moves.index(move) + 1)].update(contact)
-                                elif (pkmn in party2) & (((gen == 6) & (party.index(pkmn)+1 == 7)) | ((gen == 7) & (party.index(pkmn)+1 == 7))) or enemynum2 in range(1,808) and (pkmn.name == slotchoice2): 
+                                elif (pkmn in party2) & (((gen == 6) & (party.index(pkmn)+1 == 7)) | ((gen == 7) & (party.index(pkmn)+1 == 7))) or enemynum in range(1,808) and (pkmn.name == slotchoice2): 
                                 # this works for singles in XY, needs testing for all other games; only access first mon stuff, may want to figure out a way to include double battle (may not work for multis)
                                 # elif ((pkmn in party2) & (party.index(pkmn)+1 == 7)) | ((enctype == 't') & (party.index(pkmn)+1 == 1)): # this works for singles in XY, needs testing for all other games; only access first mon stuff, may want to figure out a way to include double battle (may not work for multis)
+                                    print(party.index(pkmn)+1, "index 2")
                                     if int(pkmn.cur_hp) > 750: ### Make sure the memory dump hasn't happened (or whatever causes the invalid values)
+                                        print("hp>max")
                                         continue
                                     if int(pkmn.level)>100:
+                                        print("lv>max")
                                         continue
                                     if (emon != pkmn) & (emon == emon): # washing the data on mon change
                                         ct = 0
@@ -2013,15 +2035,14 @@ def run():
                                             window['-typename2-e-'].Update(visible = False)
                                     
                                     pkmnEvo(pkmn, '-evo-e-', window)
-
                                     if gen==6:
                                         levelnum=int.from_bytes(c.read_memory(ppadd+(mongap*(pk-1))-256,1))
                                         batabilnum=int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))+6-264),1))
                                         hpnum=[int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))-264),2),"little"),int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))-266),2),"little")]
                                     elif gen==7:
-                                        levelnum=int.from_bytes(c.read_memory(ppadd+(mongap*(pk-1))-486,1))
-                                        batabilnum=int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))+0x36),1))
-                                        hpnum=[int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))-494),2),"little"),int.from_bytes(c.read_memory((ppadd+(mongap*(pk-1))-496),2),"little")]
+                                        levelnum=int.from_bytes(c.read_memory(ppadd+(mongap*(pke-1))-486,1))
+                                        batabilnum=int.from_bytes(c.read_memory((ppadd+(mongap*(pke-1))+0x36),1))
+                                        hpnum=[int.from_bytes(c.read_memory((ppadd+(mongap*(pke-1))-494),2),"little"),int.from_bytes(c.read_memory((ppadd+(mongap*(pke-1))-496),2),"little")]
                                     enemylevel = levelnum
                                     if pkmn.status != '':
                                         window['-status-e-'].Update(resize('images/statuses/{}.png'.format(pkmn.status), (75, 20)), visible = True)
@@ -2042,13 +2063,15 @@ def run():
                                     if gen == 7:
                                         try: 
                                             abilityname,abilitydescription = cursor.execute(query).fetchone()
-                                        except: 
+                                        except Exception as e: 
                                             emon = ''
+                                            print(e, "\nline 2068, ability error", query)
                                             continue # if this errors then the data stream is invalid anyway
                                     else:
                                         try: 
                                             abilityname,abilitydescription = cursor.execute(query).fetchone()
-                                        except: 
+                                        except Exception as e:
+                                            print(e, "\nline 2074, ability error") 
                                             continue # if this errors then the data stream is invalid anyway
                                     startupabils=["Air Lock","Cloud Nine","Delta Stream","Desolate Land","Download","Drizzle","Drought","Forewarn","Imposter","Intimidate","Mold Breaker","Pressure","Primordial Sea","Sand Stream","Slow Start","Snow Warning","Teravolt","Turboblaze","Trace","Unnerve","Aura Break","Fairy Aura","Dark Aura",'Psychic Surge','Electric Surge','Misty Surge','Grassy Surge','Comatose']
                                     if frisk == 1:
